@@ -46,6 +46,9 @@ por su cuenta; si no hay una configurada, pide que se elija. Con una sola casa, 
 
 ## Trampas
 
+- **Tiene que funcionar en GrapheneOS**, sin Google Play. Nada de esta app lo necesita: AppAuth
+  abre el inicio de sesión en Vanadium por Custom Tabs, y los avisos van por WorkManager, no por
+  FCM.
 - **Netatmo cambia el `refresh_token` en cada renovación** y el viejo deja de valer. Guardar
   siempre el nuevo, de forma atómica, o la sesión se pierde. La app de iOS y esta tienen sesiones
   separadas, cada una con sus tokens.
