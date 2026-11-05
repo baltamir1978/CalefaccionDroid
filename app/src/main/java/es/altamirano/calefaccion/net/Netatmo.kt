@@ -45,7 +45,8 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 private const val API = "https://api.netatmo.com"
-private const val SCOPES = "read_thermostat write_thermostat"
+/** `read_station`: para que Tiempo ES lea la estación meteorológica con esta misma sesión (`SessionProvider`). */
+private const val SCOPES = "read_thermostat write_thermostat read_station"
 
 sealed class NetatmoError(message: String) : Exception(message) {
     class NotConfigured : NetatmoError("Faltan las credenciales de Netatmo")

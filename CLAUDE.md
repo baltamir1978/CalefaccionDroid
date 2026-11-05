@@ -7,8 +7,8 @@ propio de esta.
 
 ## Estado (5-nov-2026)
 
-**0.1: compila, pasan 7 pruebas; sin probar contra Netatmo ni en el móvil** (aquí no hay
-credenciales). APK firmado en `~/Documentos/Calefaccion-0.1.apk`.
+**0.2: compila, pasan 7 pruebas; sin probar contra Netatmo ni en el móvil** (aquí no hay
+credenciales). APK firmado en `~/Documentos/Calefaccion-0.2.apk`.
 
 Hecho, traducido de la app de iOS:
 - Inicio de sesión con una pestaña del navegador (Custom Tabs), sin AppAuth: el flujo de Netatmo
@@ -34,7 +34,15 @@ Hecho, traducido de la app de iOS:
   varias; con una, va directo.
 - Icono: el PNG de iOS tal cual (`Tools/icono-desde-ios.sh`, sirve para las otras apps).
 
-Falta: probarlo con las casas de verdad; la autenticación compartida con TiempoDroid.
+- **Sesión compartida con Tiempo ES** (0.2, `net/SessionProvider.kt`): Netatmo cambia el
+  `refresh_token` en cada renovación, así que la sesión es de Calefacción y Tiempo le pide un
+  `access_token` por el proveedor `es.altamirano.calefaccion.netatmo` (`call("token", stale)`).
+  Sólo contesta a `es.altamirano.tiempo` con su certificado (release o depuración de este equipo,
+  SHA-256 en el código); Tiempo comprueba lo mismo de Calefacción. La sesión pide ahora también
+  `read_station`: **con una sesión iniciada en la 0.1 hay que volver a entrar** para que Tiempo
+  pueda leer la estación meteorológica.
+
+Falta: probarlo con las casas de verdad.
 
 ## La especificación es el original
 
