@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".CalefaccionApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Calefaccion"
+        android:localeConfig="@xml/locales_config">
+
+        <activity android:name=".ui.MainActivity" android:exported="true" android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- La vuelta del inicio de sesión de Netatmo: la misma Redirect URI que la app de iOS -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="calefaccion-netatmo" android:host="oauth-callback" />
+            </intent-filter>
+        </activity>
+
+        <!-- «Tengo frío» desde un acceso directo, sin pantalla -->
+        <activity android:name=".widget.WarmUpActivity" android:exported="true" android:theme="@style/Theme.Calefaccion.Invisible"
+            android:excludeFromRecents="true" android:noHistory="true" android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="calefaccion" android:host="tengo-frio" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".widget.WidgetConfigActivity" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
+        </activity>
+
+        <receiver android:name=".widget.StatusWidgetReceiver" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_status" />
+        </receiver>
+        <receiver android:name=".widget.WarmUpWidgetReceiver" android:exported="true">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_warm" />
+        </receiver>
+
+        <!-- Ajustes rápidos: «Tengo frío» y «Ausente», uno por casa -->
+        <service android:name=".widget.WarmUpTile1" android:exported="true" android:label="@string/warm_up"
+            android:icon="@drawable/ic_thermometer_up" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="false" />
+        </service>
+        <service android:name=".widget.WarmUpTile2" android:exported="true" android:label="@string/warm_up"
+            android:icon="@drawable/ic_thermometer_up" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="false" />
+        </service>
+        <service android:name=".widget.AwayTile1" android:exported="true" android:label="@string/tile_away"
+            android:icon="@drawable/ic_away" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="true" />
+        </service>
+        <service android:name=".widget.AwayTile2" android:exported="true" android:label="@string/tile_away"
+            android:icon="@drawable/ic_away" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="true" />
+        </service>
+
+    </application>
+</manifest>
