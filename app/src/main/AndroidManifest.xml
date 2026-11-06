@@ -17,7 +17,8 @@
         android:theme="@style/Theme.Calefaccion"
         android:localeConfig="@xml/locales_config">
 
-        <activity android:name=".ui.MainActivity" android:exported="true" android:launchMode="singleTask"
+        <activity android:name=".ui.MainActivity" android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation" android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,7 +43,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".widget.WidgetConfigActivity" android:exported="true">
+        <activity android:name=".widget.WidgetConfigActivity" android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" /></intent-filter>
         </activity>
 

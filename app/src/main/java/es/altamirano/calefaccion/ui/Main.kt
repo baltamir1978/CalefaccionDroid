@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -170,7 +171,8 @@ private fun LoginScreen(error: String?, busy: Boolean, onLogin: () -> Unit) {
     var settings by remember { mutableStateOf(false) }
     if (settings) { BackHandler { settings = false }; SettingsScreen { settings = false }; return }
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        // Desplazable: en una ventana baja (modo escritorio, móvil tumbado) no cabe entera.
+        CenteredScroll(PaddingValues(32.dp)) {
             Image(painterResource(R.drawable.icon_ios), null, Modifier.size(120.dp).clip(RoundedCornerShape(27.dp)))
             Spacer(Modifier.height(20.dp))
             Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
@@ -212,7 +214,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     val homesHint = stringResource(R.string.visible_homes_hint)
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { BackBar(stringResource(R.string.settings), onBack) }) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(horizontal = gutter(0.dp))) {
             section(null, credsHint) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Netatmo Connect", fontWeight = FontWeight.SemiBold)

@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -157,7 +158,7 @@ fun DetailScreen(homeId: String, onBack: () -> Unit, onWeek: (String) -> Unit, o
             IconButton(onClick = { nameAction = NameAction.CREATE to null }) { Icon(Icons.Filled.Add, stringResource(R.string.new_schedule)) }
         }
     }) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(horizontal = gutter(0.dp))) {
             section(R.string.schedules, schedulesHint) {
                 schedules.forEachIndexed { i, s ->
                     var menu by remember { mutableStateOf(false) }
@@ -370,7 +371,7 @@ fun WeekScreen(homeId: String, scheduleId: String, onBack: () -> Unit) {
 
     val weekHint = stringResource(R.string.week_hint)
     Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = { BackBar(schedule.name ?: "", onBack) }) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(horizontal = gutter(0.dp))) {
             if (days.isEmpty()) item {
                 Text(stringResource(R.string.no_week, schedule.name ?: ""), Modifier.padding(32.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else section(R.string.week, weekHint) {
@@ -463,7 +464,7 @@ fun EditScreen(homeId: String, scheduleId: String, onBack: () -> Unit) {
             TextButton(enabled = changes.isNotEmpty() && !saving, onClick = { confirm = true }) { Text(stringResource(R.string.review)) }
         }
     }) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(horizontal = gutter(0.dp))) {
             section(R.string.zones, editHint) {
                 editable.forEachIndexed { i, z ->
                     TempRow(zoneNames[z.id] ?: "", zoneColor(z.type), temps[z.id] ?: 20.0) { temps[z.id] = (it).coerceIn(MIN_TEMP, MAX_TEMP) }

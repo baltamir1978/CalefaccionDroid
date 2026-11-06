@@ -7,6 +7,8 @@ propio de esta.
 
 ## Estado (5-nov-2026)
 
+**0.2.1 (6-nov-2026): modo escritorio** — en ventana ancha (modo escritorio, tableta) el contenido se centra a 720 dp con el margen como `contentPadding` (la rueda del ratón desplaza también sobre él), y la actividad no se recrea al redimensionar (`configChanges`). Piezas en `ui/Adaptive.kt`; sin probar en modo escritorio de verdad. Las casas, en columnas (`LazyVerticalGrid` adaptable, 360 dp) y la pantalla de inicio de sesión desplazable si la ventana es baja (`CenteredScroll`). APK en `~/Documentos/Calefaccion-0.2.1.apk`.
+
 **0.2: compila, pasan 7 pruebas; sin probar contra Netatmo ni en el móvil** (aquí no hay
 credenciales). APK firmado en `~/Documentos/Calefaccion-0.2.apk`.
 

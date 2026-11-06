@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -134,9 +136,11 @@ fun OverviewScreen(onOpenHome: (Home) -> Unit, onSettings: () -> Unit) {
                 else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = {
                     scope.launch { refreshing = true; app.houses.refreshStatuses(); refreshing = false }
                 }) {
-                    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp, 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        if (visible.isEmpty() && state.loaded) item {
+                    // En una ventana ancha (modo escritorio, tableta) las casas van en columnas.
+                    LazyVerticalGrid(GridCells.Adaptive(360.dp), Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = gutter(max = 1200.dp), vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        if (visible.isEmpty() && state.loaded) item(span = { GridItemSpan(maxLineSpan) }) {
                             Column(Modifier.fillMaxWidth().padding(top = 40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Filled.VisibilityOff, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(stringResource(R.string.all_hidden), style = MaterialTheme.typography.titleMedium)
