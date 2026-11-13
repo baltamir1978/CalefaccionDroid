@@ -2,6 +2,8 @@
 
 package es.altamirano.calefaccion.ui
 
+import es.altamirano.common.ui.gutter
+import es.altamirano.common.ui.CenteredScroll
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager

@@ -6,7 +6,7 @@ En el móvil se llama **Calefacción**. Controla la calefacción de varias casas
 Versión para Android de [Calefacción Netatmo](https://github.com/baltamir1978/calefaccion-netatmo)
 (iOS), escrita desde cero en Kotlin + Jetpack Compose. Funciona sin Google Play (GrapheneOS).
 
-**Estado: 0.2** (5-nov-2026), sin probar todavía contra las casas de verdad. Ver `CLAUDE.md`.
+**Estado: 0.2.2** (13-nov-2026), sin probar todavía contra las casas de verdad. Ver `CLAUDE.md`.
 
 ## Qué hace
 
@@ -22,6 +22,8 @@ Versión para Android de [Calefacción Netatmo](https://github.com/baltamir1978/
   que lee con ella la estación meteorológica: Netatmo cambia el `refresh_token` en cada
   renovación, así que dos apps no pueden renovar la misma sesión por su cuenta. Sólo se la da a
   Tiempo ES firmada con su clave.
+- **La sesión aguanta los fallos pasajeros de Netatmo**: sólo se cierra si Netatmo dice que ya no
+  vale (`invalid_grant`), no por un error 500 o un límite de peticiones.
 - Español, inglés y francés.
 
 ## Puesta en marcha
@@ -38,8 +40,13 @@ Versión para Android de [Calefacción Netatmo](https://github.com/baltamir1978/
 4. Compila:
    ```sh
    Tools/instalar-entorno.sh      # JDK 17, Android SDK y Gradle en ~/Android, sin sudo
-   ./gradlew testDebugUnitTest assembleRelease
+   ./gradlew testDebugUnitTest lintDebug assembleRelease
    ```
+
+Hace falta clonar también [droid-common](https://github.com/baltamir1978/droid-common) **en la
+carpeta de al lado** (`../droid-common`): el código que comparten las apps de Android, que Gradle
+incluye desde ahí. En cada push, GitHub Actions pasa las pruebas y el lint
+(`.github/workflows/android.yml`).
 
 Cualquier `client_secret` dentro de una app se puede sacar del binario: vale para uso personal,
 no para distribuirla.

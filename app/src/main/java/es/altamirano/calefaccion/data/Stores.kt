@@ -1,8 +1,7 @@
 package es.altamirano.calefaccion.data
 
+import es.altamirano.common.secure.SecureFile
 import android.content.Context
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
 import es.altamirano.calefaccion.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,63 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
-import java.security.KeyStore
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
 
 private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
-
-/**
- * Un fichero cifrado con una clave AES del Android Keystore, que no sale del chip: el
- * equivalente al Llavero de iOS. `EncryptedSharedPreferences` está obsoleto; esto no necesita
- * ninguna librería. Se escribe a un temporal y se renombra: nunca queda a medias, que con el
- * `refresh_token` de Netatmo (cambia en cada renovación) sería perder la sesión.
- */
-class SecureFile(context: Context, name: String) {
-    private val file = File(context.noBackupFilesDir, name)
-
-    private fun key(): SecretKey {
-        val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-        (ks.getKey(ALIAS, null) as? SecretKey)?.let { return it }
-        val gen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-        gen.init(KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .build())
-        return gen.generateKey()
-    }
-
-    @Synchronized
-    fun read(): String? = try {
-        if (!file.exists()) null else {
-            val bytes = file.readBytes()
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, bytes, 1, bytes[0].toInt()))
-            String(cipher.doFinal(bytes, 1 + bytes[0], bytes.size - 1 - bytes[0]))
-        }
-    } catch (e: Exception) {
-        null
-    }
-
-    @Synchronized
-    fun write(text: String) {
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, key())
-        val iv = cipher.iv
-        val body = cipher.doFinal(text.toByteArray())
-        val tmp = File(file.parentFile, file.name + ".tmp")
-        tmp.writeBytes(byteArrayOf(iv.size.toByte()) + iv + body)
-        tmp.renameTo(file)
-    }
-
-    @Synchronized
-    fun clear() { file.delete() }
-
-    private companion object { const val ALIAS = "calefaccion" }
-}
 
 @Serializable
 data class Credentials(val clientId: String = "", val clientSecret: String = "") {
@@ -89,8 +33,13 @@ data class Tokens(val accessToken: String, val refreshToken: String, val expires
 }
 
 class SecureStore(context: Context) {
-    private val tokensFile = SecureFile(context, "netatmo-tokens.bin")
-    private val credsFile = SecureFile(context, "netatmo-credentials.bin")
+    private val tokensFile = SecureFile(context, "netatmo-tokens.bin", alias = "calefaccion")
+    private val credsFile = SecureFile(context, "netatmo-credentials.bin", alias = "calefaccion")
+    private val stateFile = SecureFile(context, "netatmo-oauth-state.bin", alias = "calefaccion")
+
+    /** El `state` del inicio de sesión en curso, para comprobarlo a la vuelta del navegador. */
+    fun oauthState(): String? = stateFile.read()
+    fun saveOauthState(state: String?) = if (state == null) stateFile.clear() else stateFile.write(state)
 
     fun tokens(): Tokens? = tokensFile.read()?.let { runCatching { json.decodeFromString<Tokens>(it) }.getOrNull() }
     fun saveTokens(t: Tokens) = tokensFile.write(json.encodeToString(Tokens.serializer(), t))

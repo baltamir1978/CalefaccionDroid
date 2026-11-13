@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import es.altamirano.calefaccion.BuildConfig
 import es.altamirano.calefaccion.CalefaccionApp
 import kotlinx.coroutines.runBlocking
 import java.security.MessageDigest
@@ -56,10 +57,10 @@ class SessionProvider : ContentProvider() {
 
     private companion object {
         const val TIEMPO = "es.altamirano.tiempo"
-        /** SHA-256 del certificado de release de Tiempo y del de depuración de este equipo. */
-        val TIEMPO_CERTS = setOf(
+        /** SHA-256 del certificado de release de Tiempo; el de depuración de este equipo, sólo al depurar. */
+        val TIEMPO_CERTS = setOfNotNull(
             "435010C239621F7ED81386E3013718747E66F785A94A71D51C80EEF170F882E3",
-            "1389502CE36317BFB67513DF22DD4033809FE39B1183D67B295C0E26814BFA53",
+            "1389502CE36317BFB67513DF22DD4033809FE39B1183D67B295C0E26814BFA53".takeIf { BuildConfig.DEBUG },
         )
     }
 }

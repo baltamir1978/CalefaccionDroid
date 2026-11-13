@@ -52,6 +52,8 @@ sealed class NetatmoError(message: String) : Exception(message) {
     class NotConfigured : NetatmoError("Faltan las credenciales de Netatmo")
     class NotAuthenticated : NetatmoError("No has iniciado sesión en Netatmo")
     class RefreshFailed : NetatmoError("No se pudo renovar la sesión")
+    /** Netatmo ya no acepta el `refresh_token` (`invalid_grant`): no queda más que volver a entrar. */
+    class InvalidGrant : NetatmoError("La sesión de Netatmo ha caducado")
     class Http(val status: Int, val code: Int?, detail: String?) : NetatmoError("Error $status${code?.let { " ($it)" } ?: ""}: ${detail ?: "sin detalle"}")
     class Network(cause: IOException) : NetatmoError(cause.message ?: "sin red")
     class OAuth(reason: String) : NetatmoError(reason)
@@ -72,7 +74,10 @@ class AuthManager(private val store: SecureStore) {
     val isAuthenticated get() = _tokens.value != null
 
     private val refreshLock = Mutex()
-    private var pendingState: String? = null
+    /** En disco: Android puede matar la app mientras se inicia sesión en el navegador. */
+    private var pendingState: String?
+        get() = store.oauthState()
+        set(value) = store.saveOauthState(value)
 
     val credentials: Credentials get() = store.credentials()
     fun saveCredentials(c: Credentials) = store.saveCredentials(c)
@@ -97,7 +102,9 @@ class AuthManager(private val store: SecureStore) {
         uri.getQueryParameter("error")?.let { throw NetatmoError.OAuth(it) }
         val code = uri.getQueryParameter("code") ?: throw NetatmoError.OAuth("No llegó el código de autorización")
         val state = uri.getQueryParameter("state")
-        if (pendingState != null && state != pendingState) throw NetatmoError.OAuth("El parámetro «state» no coincide")
+        val expected = pendingState
+        pendingState = null
+        if (expected == null || state != expected) throw NetatmoError.OAuth("El parámetro «state» no coincide")
         val c = credentials
         val t = requestToken(mapOf(
             "grant_type" to "authorization_code", "client_id" to c.clientId, "client_secret" to c.clientSecret,
@@ -129,7 +136,9 @@ class AuthManager(private val store: SecureStore) {
         val t = try {
             requestToken(mapOf("grant_type" to "refresh_token", "refresh_token" to current.refreshToken,
                 "client_id" to c.clientId, "client_secret" to c.clientSecret))
-        } catch (e: NetatmoError.Http) {
+        } catch (e: NetatmoError.InvalidGrant) {
+            // Sólo aquí se pierde la sesión. Un 500, un 503 o un 429 de Netatmo son pasajeros: se
+            // conserva el `refresh_token` y se vuelve a intentar en la siguiente petición.
             logout()
             throw NetatmoError.RefreshFailed()
         }
@@ -144,23 +153,50 @@ class AuthManager(private val store: SecureStore) {
         val body = try {
             http.newCall(req).execute().use { r ->
                 val text = r.body?.string().orEmpty()
-                if (!r.isSuccessful) throw httpError(r.code, text)
+                if (!r.isSuccessful) throw if (isInvalidGrant(r.code, text)) NetatmoError.InvalidGrant() else httpError(r.code, text)
                 text
             }
         } catch (e: IOException) {
             throw NetatmoError.Network(e)
         }
-        val o = NetatmoJson.parseToJsonElement(body) as JsonObject
+        val o = runCatching { NetatmoJson.parseToJsonElement(body) as JsonObject }.getOrNull()
+            ?.takeIf { it["access_token"] != null && it["refresh_token"] != null }
+            ?: throw NetatmoError.Http(200, null, "respuesta inesperada de Netatmo")
         val expires = o["expires_in"]?.jsonPrimitive?.longOrNull ?: o["expire_in"]?.jsonPrimitive?.longOrNull ?: 10800
         Tokens(o["access_token"]!!.jsonPrimitive.content, o["refresh_token"]!!.jsonPrimitive.content,
             System.currentTimeMillis() + expires * 1000)
     }
 }
 
+/**
+ * El punto de tokens contesta `{"error":"invalid_grant"}` (400) cuando el `refresh_token` o el
+ * código ya no valen. Cualquier otro fallo (5xx, 429, una página de error) no dice nada de la sesión.
+ */
+internal fun isInvalidGrant(status: Int, body: String): Boolean {
+    if (status != 400) return false
+    val error = runCatching { (NetatmoJson.parseToJsonElement(body) as JsonObject)["error"]?.jsonPrimitive?.content }.getOrNull()
+    return error == "invalid_grant"
+}
+
 private fun httpError(status: Int, body: String): NetatmoError.Http {
     val err = runCatching { NetatmoJson.decodeFromString(NetatmoErrorResponse.serializer(), body) }.getOrNull()?.error
     return NetatmoError.Http(status, err?.code, err?.message)
 }
+
+/**
+ * Las zonas del horario con las temperaturas nuevas, para `synchomeschedule`: ausente (tipo 2) y
+ * antihielo (tipo 3) toman las suyas; el resto, la de [zoneTemps] si la hay. Sólo cambia la
+ * habitación del termostato; lo demás se reenvía tal cual.
+ */
+internal fun syncZones(schedule: HomeSchedule, thermostatRoomId: String?, zoneTemps: Map<Int, Double>,
+                       awayTemp: Double, hgTemp: Double): List<SyncZone> =
+    (schedule.zones ?: emptyList()).map { zone ->
+        val newTemp = when (zone.type) { 2 -> awayTemp; 3 -> hgTemp; else -> zoneTemps[zone.id] }
+        SyncZone(zone.id, zone.type ?: 0, (zone.rooms ?: emptyList()).map { r ->
+            val applies = thermostatRoomId == null || r.id == thermostatRoomId
+            SyncRoom(r.id, if (newTemp != null && applies) newTemp else r.thermSetpointTemperature ?: 0.0)
+        })
+    }
 
 /** La API Energy: lo que usa la app de iOS (`EnergyService.swift`). */
 class Energy(private val auth: AuthManager, private val settings: Settings) {
@@ -216,13 +252,7 @@ class Energy(private val auth: AuthManager, private val settings: Settings) {
      */
     suspend fun syncScheduleTemperatures(homeId: String, schedule: HomeSchedule, thermostatRoomId: String?,
                                          zoneTemps: Map<Int, Double>, awayTemp: Double, hgTemp: Double) {
-        val zones = (schedule.zones ?: emptyList()).map { zone ->
-            val newTemp = when (zone.type) { 2 -> awayTemp; 3 -> hgTemp; else -> zoneTemps[zone.id] }
-            SyncZone(zone.id, zone.type ?: 0, (zone.rooms ?: emptyList()).map { r ->
-                val applies = thermostatRoomId == null || r.id == thermostatRoomId
-                SyncRoom(r.id, if (newTemp != null && applies) newTemp else r.thermSetpointTemperature ?: 0.0)
-            })
-        }
+        val zones = syncZones(schedule, thermostatRoomId, zoneTemps, awayTemp, hgTemp)
         val form = scheduleForm(homeId, zones, timetableOf(schedule), awayTemp, hgTemp).toMutableMap()
         form["schedule_id"] = schedule.id
         schedule.name?.let { form["name"] = it }

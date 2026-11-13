@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -16,14 +15,14 @@ fun localString(key: String) = "\"" + (local.getProperty(key) ?: "").replace("\"
 
 android {
     namespace = "es.altamirano.calefaccion"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "es.altamirano.calefaccion"
         minSdk = 31          // Android 12
-        targetSdk = 35
-        versionCode = 3
-        versionName = "0.2.1"
+        targetSdk = 36
+        versionCode = 4
+        versionName = "0.2.2"
         buildConfigField("String", "NETATMO_CLIENT_ID", localString("netatmo.clientId"))
         buildConfigField("String", "NETATMO_CLIENT_SECRET", localString("netatmo.clientSecret"))
     }
@@ -40,6 +39,10 @@ android {
         }
     }
 
+    // Leer `Locale.getDefault()` al pintar no se entera de un cambio de idioma en caliente; aquí da
+    // igual, porque al cambiar el idioma Android recrea la actividad. Aviso, no error.
+    lint { warning += "NonObservableLocale" }
+
     buildTypes {
         release {
             if (releaseKey != null) signingConfig = signingConfigs.getByName("release")
@@ -52,7 +55,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -60,6 +62,7 @@ android {
 }
 
 dependencies {
+    implementation("es.altamirano:common")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

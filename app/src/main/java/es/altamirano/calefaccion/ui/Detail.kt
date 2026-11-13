@@ -2,6 +2,7 @@
 
 package es.altamirano.calefaccion.ui
 
+import es.altamirano.common.ui.gutter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -104,7 +105,7 @@ fun LazyListScope.section(header: Int?, footer: String? = null, content: @Compos
     item {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
             header?.let {
-                Text(stringResource(it).uppercase(Locale.getDefault()), fontSize = 12.sp,
+                Text(stringResource(it).uppercase(androidx.compose.ui.platform.LocalLocale.current.platformLocale), fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, bottom = 6.dp))
             }
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainer)) { content() }

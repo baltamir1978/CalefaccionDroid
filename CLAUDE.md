@@ -5,7 +5,11 @@ Kotlin + Jetpack Compose**. Lo común a las apps de Android (firma, `versionCode
 distribución, código compartido) está en el `CLAUDE.md` de la carpeta de proyectos; aquí va lo
 propio de esta.
 
-## Estado (5-nov-2026)
+## Estado (13-nov-2026)
+
+**0.2.2 (13-nov-2026): la sesión ya no se pierde por un fallo pasajero de Netatmo.** Al renovar, cualquier error HTTP (un 500, un 503, un 429) hacía `logout()` y obligaba a volver a entrar, dejando de paso a Tiempo ES sin Netatmo. Ahora sólo `{"error":"invalid_grant"}` con 400 cierra la sesión (`isInvalidGrant` en `net/Netatmo.kt`, con pruebas); lo demás conserva el `refresh_token` y se reintenta en la siguiente petición. Una respuesta 200 sin tokens da error en vez de reventar. El `state` de OAuth se guarda en disco y **se exige a la vuelta del navegador**. El certificado de depuración sólo se acepta como firma de Tiempo en builds de depuración. La lógica de `synchomeschedule` sale a `syncZones` (función pura) con 5 pruebas: 15 pruebas en total. APK en `~/Documentos/Calefaccion-0.2.2.apk`.
+
+**Común a las cinco apps (13-nov-2026):** dependencias al día (Gradle 9.9.1, AGP 9.5.1 con Kotlin integrado —ya no se aplica `kotlin.android`—, Kotlin 2.4.21, Compose BOM 2026.09, `compileSdk` 37, `targetSdk` 36); **código compartido en `../droid-common`** (aquí: `SecureFile` (en `data/Stores.kt` quedan `SecureStore` y lo demás) y las piezas de modo escritorio; `ui/Adaptive.kt` ya no existe), que hay que tener clonado al lado (`includeBuild` en `settings.gradle.kts`); **CI** en GitHub Actions (`.github/workflows/android.yml`: pruebas, lint y APK de depuración en cada push); `lintDebug` pasa sin errores y forma parte de la comprobación (`./gradlew testDebugUnitTest lintDebug`). `NonObservableLocale` va como aviso: al cambiar el idioma Android recrea la actividad. **Nada de esto está probado en el móvil.**
 
 **0.2.1 (6-nov-2026): modo escritorio** — en ventana ancha (modo escritorio, tableta) el contenido se centra a 720 dp con el margen como `contentPadding` (la rueda del ratón desplaza también sobre él), y la actividad no se recrea al redimensionar (`configChanges`). Piezas en `ui/Adaptive.kt`; sin probar en modo escritorio de verdad. Las casas, en columnas (`LazyVerticalGrid` adaptable, 360 dp) y la pantalla de inicio de sesión desplazable si la ventana es baja (`CenteredScroll`). APK en `~/Documentos/Calefaccion-0.2.1.apk`.
 
