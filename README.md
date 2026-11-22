@@ -6,7 +6,7 @@ En el móvil se llama **Calefacción**. Controla la calefacción de varias casas
 Versión para Android de [Calefacción Netatmo](https://github.com/baltamir1978/calefaccion-netatmo)
 (iOS), escrita desde cero en Kotlin + Jetpack Compose. Funciona sin Google Play (GrapheneOS).
 
-**Estado: 0.2.2** (13-nov-2026), sin probar todavía contra las casas de verdad. Ver `CLAUDE.md`.
+**Estado: 0.2.3** (22-nov-2026), sin probar todavía contra las casas de verdad. Ver `CLAUDE.md`.
 
 ## Qué hace
 

@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
+import es.altamirano.common.ui.AppTheme
+import es.altamirano.common.ui.withBrandSelection
 
 /** El naranja del sistema de iOS, el color de la app (caldera, control del objetivo, enlaces). */
 val Orange = Color(0xFFFF9500)
@@ -55,7 +57,8 @@ private val Dark = darkColorScheme(
 
 @Composable
 fun CalefaccionTheme(content: @Composable () -> Unit) =
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) Dark else Light, content = content)
+    // Material 3 Expressive (droid-common): lo seleccionado, en naranja clarito.
+    AppTheme(if (isSystemInDarkTheme()) Dark.withBrandSelection(OrangeDark, dark = true) else Light.withBrandSelection(Orange, dark = false), content = content)
 
 /** «21.5°» como en iOS (`Formatters.temperature`), con la coma o el punto del idioma. */
 fun formatTemp(v: Double?): String = if (v == null) "--" else String.format(Locale.getDefault(), "%.1f°", v)

@@ -21,8 +21,8 @@ android {
         applicationId = "es.altamirano.calefaccion"
         minSdk = 31          // Android 12
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.2.2"
+        versionCode = 5
+        versionName = "0.2.3"
         buildConfigField("String", "NETATMO_CLIENT_ID", localString("netatmo.clientId"))
         buildConfigField("String", "NETATMO_CLIENT_SECRET", localString("netatmo.clientSecret"))
     }

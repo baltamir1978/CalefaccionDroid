@@ -5,7 +5,9 @@ Kotlin + Jetpack Compose**. Lo común a las apps de Android (firma, `versionCode
 distribución, código compartido) está en el `CLAUDE.md` de la carpeta de proyectos; aquí va lo
 propio de esta.
 
-## Estado (13-nov-2026)
+## Estado (22-nov-2026)
+
+**0.2.3 (22-nov-2026): aspecto Material 3 Expressive, como GpsDroid.** Lo pidió Bruno («dale una vuelta al aspecto del resto de apps con este lenguaje de diseño; lo seleccionado debería estar en un verde clarito, no en el mismo gris»). El tema sale de `droid-common` (`ui/Expressive.kt`: `AppTheme` = `MaterialExpressiveTheme` + `MotionScheme.expressive()` + esquinas grandes, y `withBrandSelection`, que pone `secondaryContainer` —chips, indicador de la barra, botones segmentados— en un tono clarito del color de la app). material3 1.5.0-rc01 en todas. Lo seleccionado en naranja clarito. `MenuAnchorType` pasa a llamarse `ExposedDropdownMenuAnchorType` en material3 1.5 y `ExposedDropdownMenu` se importa aparte. APK en `~/Documentos/Calefaccion-0.2.3.apk`. **Sin probar en el móvil.**
 
 **0.2.2 (13-nov-2026): la sesión ya no se pierde por un fallo pasajero de Netatmo.** Al renovar, cualquier error HTTP (un 500, un 503, un 429) hacía `logout()` y obligaba a volver a entrar, dejando de paso a Tiempo ES sin Netatmo. Ahora sólo `{"error":"invalid_grant"}` con 400 cierra la sesión (`isInvalidGrant` en `net/Netatmo.kt`, con pruebas); lo demás conserva el `refresh_token` y se reintenta en la siguiente petición. Una respuesta 200 sin tokens da error en vez de reventar. El `state` de OAuth se guarda en disco y **se exige a la vuelta del navegador**. El certificado de depuración sólo se acepta como firma de Tiempo en builds de depuración. La lógica de `synchomeschedule` sale a `syncZones` (función pura) con 5 pruebas: 15 pruebas en total. APK en `~/Documentos/Calefaccion-0.2.2.apk`.
 
